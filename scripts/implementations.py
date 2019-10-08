@@ -192,10 +192,10 @@ def ridge_regression(y, tx, lambda_):
     w = np.zeros(d)
 
     # solve normal equations
-    w = np.linalg.solve(tx.T @ tx + 2*n*lambda_ * np.eye(d), tx.T @ y)
+    w = np.linalg.solve(tx.T @ tx + n*lambda_ * np.eye(d), tx.T @ y)
 
     # return loss and gradient
-    return w, 1/(2*n) * np.sum((y - tx @ w) ** 2) + lambda_ * w.T.dot(w)
+    return w, 1/(2*n) * np.sum((y - tx @ w) ** 2) + lambda_/2 * w.T.dot(w)
 
 
 
@@ -271,3 +271,29 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma=0):
         return gradient_descent_linesearch(loss_function, initial_w, max_iters)
     else:
         return gradient_descent(loss_function, initial_w, max_iters, gamma)
+    
+    
+def kernel_RBF(X1, X2, sigma=1):
+    N1, D1 = np.shape(X1)
+    N2, D2 = np.shape(X2)
+    K = np.zeros((N1, N2))
+
+    for i in range(0, N1):
+        for j in range(0, N2):
+            K[i, j] = np.sum((X1[i] - X2[j]) ** 2)
+
+    return np.exp(-K / (2 * sigma**2))
+
+def kernel_poly(X1, X2, p=2):
+    N1, D1 = np.shape(X1)
+    N2, D2 = np.shape(X2)
+    return np.power(np.ones((N1, N2)) + X1@X2.T, p)
+
+
+def kernel_predict(kernel_fun, y, X, Xtest, lambda_=0):
+    K = kernel_fun(X, X)
+    Ktest = kernel_fun(Xtest, X)
+    
+    u = np.linalg.solve(K + lambda_ * np.eye(len(y)), y)
+    
+    return np.sign(Ktest @ u)
