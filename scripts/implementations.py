@@ -183,7 +183,7 @@ def least_squares(y, tx):
     # solve normal equations
     w = np.linalg.solve(tx.T @ tx, tx.T @ y)
 
-    # return loss and gradient
+    # return weights and loss
     return w, 1/(2*n) * np.sum((y - tx @ w) ** 2)
 
 
@@ -221,8 +221,13 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma=0):
 def least_squares_SGD(y, tx, initial_w, max_iters, gamma=0):
     def loss_function(w):
         # select a single example to compute the loss and the gradient
-        y_sgd, tx_sgd = batch_iter(y, tx, 1)
-        return least_squares_loss_function(y_sgd, tx_sgd, w)
+        ySGD = []
+        xSGD = []
+        for y_sgd, tx_sgd in batch_iter(y, tx, 1):
+            ySGD = y_sgd
+            xSGD = tx_sgd
+            break
+        return least_squares_loss_function(ySGD, xSGD, w)
 
     if gamma == 0:
         return gradient_descent_linesearch(loss_function, initial_w, max_iters)
@@ -268,7 +273,7 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma=0):
         return f, g
 
     if gamma == 0:
-        return gradient_descent_linesearch(loss_function, initial_w, max_iters)
+        return gradient_descent_linesearch(loss_function, initial_w, max_iters, verbose=True)
     else:
         return gradient_descent(loss_function, initial_w, max_iters, gamma)
     
@@ -290,9 +295,9 @@ def kernel_poly(X1, X2, p=2):
     return np.power(np.ones((N1, N2)) + X1@X2.T, p)
 
 
-def kernel_predict(kernel_fun, y, X, Xtest, lambda_=0):
-    K = kernel_fun(X, X)
-    Ktest = kernel_fun(Xtest, X)
+def kernel_predict(kernel_fun, y, X, Xtest, *args, lambda_=0):
+    K = kernel_fun(X, X, *args)
+    Ktest = kernel_fun(Xtest, X, *args)
     
     u = np.linalg.solve(K + lambda_ * np.eye(len(y)), y)
     
