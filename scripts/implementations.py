@@ -83,27 +83,35 @@ def gradient_descent_linesearch(loss_function, w, max_iters, *args, verbose=Fals
     # evaluate the initial function value and gradient
     f, g = loss_function(w, *args)
     evals = 0
-    gamma = 1.0
+    gamma = 1.
 
     while True:
         # line-search using quadratic interpolation to
         # find an acceptable value of gamma
         gg = g.T.dot(g)
+        w_evals = 0
 
         while True:
             # compute params
             w_new = w - gamma * g
             f_new, g_new = loss_function(w_new, *args)
 
+            w_evals += 1
             evals += 1
 
             if f_new <= f - linesearch_beta * gamma * gg:
                 # we have found a good enough gamma to decrease the loss function
                 break
+                
+            if verbose:
+                print("f_new: %.3f - f: %.3f - Backtracking..." % (f_new, f))
 
             # update step size
-            gamma = (gamma ** 2) * gg/(2. * (f_new - f + gamma * gg))
-
+            if np.isinf(f_new):
+                gamma = 1. / (10**w_evals)
+            else:
+                gamma = (gamma ** 2) * gg/(2. * (f_new - f + gamma * gg))
+                
         # print progress
         if verbose:
             print("%d - loss: %.3f" % (evals, f_new))
@@ -123,6 +131,81 @@ def gradient_descent_linesearch(loss_function, w, max_iters, *args, verbose=Fals
 
         # test termination conditions
         if np.linalg.norm(g, float('inf')) < linesearch_optTol:
+            if verbose:
+                print("Problem solved up to optimality tolerance %.3f" % linesearch_optTol)
+            break
+
+        if evals >= max_iters:
+            if verbose:
+                print("Reached maximum number of function evaluations %d" % max_iters)
+            break
+
+    return w, f
+
+def gradient_descent_sparse(loss_function, w, lambda_, max_iters, *args, verbose=False):
+    """
+    Uses the L1 proximal gradient descent to optimize the objective function
+
+    The line search algorithm divides the step size by 2 until
+    it find the step size that results in a decrease of the L1 regularized
+    objective function
+    """
+    # parameters of the optimization
+    linesearch_optTol = 1e-2
+    gamma = 1e-4
+
+    # Evaluate the initial function value and gradient
+    f, g = loss_function(w,*args)
+    evals = 1
+
+    alpha = 1.
+    proxL1 = lambda w, alpha: np.sign(w) * np.maximum(abs(w) - lambda_*alpha,0)
+    L1Term = lambda w: lambda_ * np.sum(np.abs(w))
+
+    while True:
+        gtd = None
+        # start line search to determine alpha
+        while True:
+            w_new = w - alpha * g
+            w_new = proxL1(w_new, alpha)
+
+            if gtd is None:
+                gtd = g.T.dot(w_new - w)
+
+            f_new, g_new = loss_function(w_new, *args)
+            evals += 1
+
+            if f_new + L1Term(w_new) <= f + L1Term(w) + gamma*alpha*gtd:
+                # Wolfe condition satisfied, end the line search
+                break
+
+            if verbose > 1:
+                print("Backtracking... f_new: %.3f, f: %.3f" % (f_new, f))
+
+            # update alpha
+            alpha /= 2.
+
+        # print progress
+        if verbose > 0:
+            print("%d - alpha: %.3f - loss: %.3f" % (evals, alpha, f_new))
+
+        # update step-size for next iteration
+        y = g_new - g
+        alpha = -alpha*np.dot(y.T,g) / np.dot(y.T,y)
+
+        # safety guards
+        if np.isnan(alpha) or alpha < 1e-10 or alpha > 1e10:
+            alpha = 1.
+
+        # update weights / loss / gradient
+        w = w_new
+        f = f_new
+        g = g_new
+
+        # test termination conditions
+        opt_cond = np.linalg.norm(w - proxL1(w - g, 1.0), float('inf'))
+
+        if opt_cond < linesearch_optTol:
             if verbose:
                 print("Problem solved up to optimality tolerance %.3f" % linesearch_optTol)
             break
@@ -217,6 +300,13 @@ def least_squares_GD(y, tx, initial_w, max_iters, gamma=0):
         return gradient_descent_linesearch(loss_function, initial_w, max_iters)
     else:
         return gradient_descent(loss_function, initial_w, max_iters, gamma)
+    
+def least_squares_sparse(y, tx, lambda_, initial_w, max_iters):
+    def loss_function(w):
+        # compute the loss and gradient using all examples
+        return least_squares_loss_function(y, tx, w)
+
+    return gradient_descent_sparse(loss_function, initial_w, lambda_, max_iters)
 
 def least_squares_SGD(y, tx, initial_w, max_iters, gamma=0):
     def loss_function(w):
@@ -238,31 +328,26 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma=0):
 
 def log_reg_loss_function(y, tx, w):
     n, d = tx.shape
-    yXw = y * tx.dot(w)
+    yXw = y * (tx @ w)
 
     # compute the function value
     f = np.sum(np.log(1. + np.exp(-yXw)))
 
     # compute the gradient value
-    res = - y / (1. + np.exp(yXw))
-    g = tx.T.dot(res)
+    g = tx.T @ (- y / (1. + np.exp(yXw)))
 
     return f, g
 
-def logistic_regression(y, tx, initial_w, max_iters, gamma=0):
-    n, d = tx.shape
-
+def logistic_regression(y, tx, initial_w, max_iters, gamma=0, verbose=False):
     def loss_function(w):
         return log_reg_loss_function(y, tx, w)
 
     if gamma == 0:
-        return gradient_descent_linesearch(loss_function, initial_w, max_iters)
+        return gradient_descent_linesearch(loss_function, initial_w, max_iters, verbose=verbose)
     else:
-        return gradient_descent(loss_function, initial_w, max_iters, gamma)
+        return gradient_descent(loss_function, initial_w, max_iters, gamma, verbose=verbose)
 
-def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma=0):
-    n, d = tx.shape
-
+def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma=0, verbose=False):
     def loss_function(w):
         f, g = log_reg_loss_function(y, tx, w)
 
@@ -273,10 +358,15 @@ def reg_logistic_regression(y, tx, lambda_, initial_w, max_iters, gamma=0):
         return f, g
 
     if gamma == 0:
-        return gradient_descent_linesearch(loss_function, initial_w, max_iters, verbose=True)
+        return gradient_descent_linesearch(loss_function, initial_w, max_iters, verbose=verbose)
     else:
-        return gradient_descent(loss_function, initial_w, max_iters, gamma)
+        return gradient_descent(loss_function, initial_w, max_iters, gamma, verbose=verbose)
     
+def logistic_regression_sparse(y, tx, lambda_, initial_w, max_iters, verbose=False):
+    def loss_function(w):
+        return log_reg_loss_function(y, tx, w)
+
+    return gradient_descent_sparse(loss_function, initial_w, lambda_, max_iters, verbose=verbose)
     
 def kernel_RBF(X1, X2, sigma=1):
     N1, D1 = np.shape(X1)
