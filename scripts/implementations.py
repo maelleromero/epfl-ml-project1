@@ -10,9 +10,11 @@ def standardize(x):
 
 # removes features from the data from string input
 # also removes wanted features from features list
-# example
-# tX, features = remove_features(['DER_mass_MMC','DER_mass_transverse_met_lep'], verbose=True)
-def remove_features(feats, verbose=False):
+# data is tX
+# features is list of features from load_csv
+# feats is array of strings of features that we want to remove
+def remove_features(data, features, feats, verbose=False):
+
     idx_to_remove = np.ones(len(feats))
     removed = []
 
@@ -26,7 +28,7 @@ def remove_features(feats, verbose=False):
     if verbose:
         print("Features removed:", *removed, sep='\n')
 
-    return np.delete(tX, idx_to_remove, 1), np.delete(features, idx_to_remove)
+    return np.delete(data, idx_to_remove, 1), np.delete(features, idx_to_remove)
 
 # taken from labs
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
