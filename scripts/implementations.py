@@ -8,6 +8,26 @@ def standardize(x):
     x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
     return x
 
+# removes features from the data from string input
+# also removes wanted features from features list
+# example
+# tX, features = remove_features(['DER_mass_MMC','DER_mass_transverse_met_lep'], verbose=True)
+def remove_features(feats, verbose=False):
+    idx_to_remove = np.ones(len(feats))
+    removed = []
+
+    for i, feat in enumerate(feats):
+        idx_to_remove[i] = np.where(features == feat)[0]
+        if not (idx_to_remove[i].shape == 0):
+            removed.append(feat)
+
+    idx_to_remove = idx_to_remove.astype(np.int)
+
+    if verbose:
+        print("Features removed:", *removed, sep='\n')
+
+    return np.delete(tX, idx_to_remove, 1), np.delete(features, idx_to_remove)
+
 # taken from labs
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
