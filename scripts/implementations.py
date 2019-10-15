@@ -5,15 +5,25 @@ import numpy as np
 import math
 
 def standardize(x):
+    """
+    Standardizes a data matrix.
+
+    :param x: data
+    :return: standardized data
+    """
     x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
     return x
 
-# removes features from the data from string input
-# also removes wanted features from features list
-# data is tX
-# features is list of features from load_csv
-# feats is array of strings of features that we want to remove
 def remove_features(data, features, feats, verbose=False):
+    """
+    This function removes features from the data and the features list
+
+    :param data: tX data
+    :param features: list of all features from load_csv
+    :param feats: array of strings containing the features we want to remove
+    :param verbose: output list of features successfully removed
+    :return: new data, new features
+    """
 
     idx_to_remove = np.ones(len(feats))
     removed = []
@@ -56,7 +66,19 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
         if start_index != end_index:
             yield shuffled_y[start_index:end_index], shuffled_tx[start_index:end_index]
 
-def gradient_descent(loss_function, w, max_iters, gamma, *args, verbose=False):
+def gradient_descent(loss_function, w, max_iters, gamma, verbose=False, *args):
+    """
+    Gradient descent
+
+    :param loss_function: function to calculate loss
+    :param w: initial weight vector
+    :param max_iters: maximum number of iterations
+    :param gamma: gradient descent parameter
+    :param verbose: Print output
+    :param args: extra arguments
+    :return: weight, loss
+    """
+
     # set an optimality stopping criterion
     optimal_g = 1e-4
 
@@ -95,7 +117,19 @@ def gradient_descent(loss_function, w, max_iters, gamma, *args, verbose=False):
     return w, f
 
 
-def gradient_descent_linesearch(loss_function, w, max_iters, *args, verbose=False):
+def gradient_descent_linesearch(loss_function, w, max_iters, verbose=False, *args):
+    """
+    Linesearch Gradient Descent. Uses quadratic interpolation to find best
+    possible gamma value.
+
+    :param loss_function: function to calculate loss
+    :param w: initial weight vector
+    :param max_iters: maximum number of iterations
+    :param verbose: Print output
+    :param args: extra arguments
+    :return: weight, loss
+    """
+
     # set an optimality stopping criterion
     linesearch_optTol = 1e-2
 
@@ -164,14 +198,25 @@ def gradient_descent_linesearch(loss_function, w, max_iters, *args, verbose=Fals
 
     return w, f
 
-def gradient_descent_sparse(loss_function, w, lambda_, max_iters, *args, verbose=False):
+def gradient_descent_sparse(loss_function, w, lambda_, max_iters, verbose=False, *args):
     """
-    Uses the L1 proximal gradient descent to optimize the objective function
+    Sparse Gradient Descent
+
+    Uses the L1 proximal gradient descent to optimize the objective function.
 
     The line search algorithm divides the step size by 2 until
     it find the step size that results in a decrease of the L1 regularized
-    objective function
+    objective function.
+
+    :param loss_function: function to calculate loss
+    :param w: initial weight vector
+    :param lambda_: hyperparameter
+    :param max_iters: maximum number of iterations
+    :param verbose: Print output
+    :param args: extra arguments
+    :return:
     """
+
     # parameters of the optimization
     linesearch_optTol = 1e-2
     gamma = 1e-4
@@ -240,6 +285,21 @@ def gradient_descent_sparse(loss_function, w, lambda_, max_iters, *args, verbose
     return w, f
 
 def cross_validate(y, tx, train, predict, ratio, n_iter):
+    """
+    Cross Validate
+
+    Shuffles dataset randomly n_iter times, divides tx in train and
+    test to compute accuracy.
+
+    :param y: y
+    :param tx: data
+    :param train: train function
+    :param predict: prediction function
+    :param ratio: train/test ratio
+    :param n_iter: number of iterations
+    :return:
+    """
+
     n, d = tx.shape
     n_train = math.floor(ratio * n)
     
@@ -264,6 +324,16 @@ def cross_validate(y, tx, train, predict, ratio, n_iter):
     return accuracy / n_iter
 
 def find_max_hyperparam(classifier, lambdas):
+    """
+    Find Max Hyperparam
+
+    Finds optimal lambda_ hyperparameter (lowest loss).
+
+    :param classifier: lambda classifier function
+    :param lambdas: array of possible lambdas
+    :return: optimal trio of lambda_, weight, loss
+    """
+
     w_best = []
     loss_best = np.inf
     lambda_best = 0
@@ -279,9 +349,23 @@ def find_max_hyperparam(classifier, lambdas):
     return lambda_best, w_best, loss_best
 
 def compute_accuracy(ypred, yreal):
+    """
+    Compute Accuracy
+
+    :param ypred: predicted y
+    :param yreal: real y
+    :return: elementwise accuracy
+    """
     return np.sum(ypred == yreal) / len(yreal)
 
 def least_squares(y, tx):
+    """
+    Least Squares
+
+    :param y: y
+    :param tx: data
+    :return: weight, loss
+    """
     n, d = tx.shape
     w = np.zeros(d)
 
@@ -293,6 +377,14 @@ def least_squares(y, tx):
 
 
 def ridge_regression(y, tx, lambda_):
+    """
+    Ridge Regression
+
+    :param y: y
+    :param tx: data
+    :param lambda_: lambda parameter
+    :return: weight, loss
+    """
     n, d = tx.shape
     w = np.zeros(d)
 
@@ -300,6 +392,7 @@ def ridge_regression(y, tx, lambda_):
     w = np.linalg.solve(tx.T @ tx + n*lambda_ * np.eye(d), tx.T @ y)
 
     # return loss and gradient
+    # return weight and loss
     return w, 1/(2*n) * np.sum((y - tx @ w) ** 2) + lambda_/2 * w.T.dot(w)
 
 
