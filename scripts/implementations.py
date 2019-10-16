@@ -40,6 +40,40 @@ def remove_features(data, features, feats, verbose=False):
 
     return np.delete(data, idx_to_remove, 1), np.delete(features, idx_to_remove)
 
+def binarize_undefined(data, features, feats, verbose=False):
+    """
+    Additive Binarization of NaNs in a database.
+    Adds a feature whose value is 1 if the value is defined in wanted feature
+    column (and 0 otherwise).
+
+    :param data: data with NaN values
+    :param feats: features to take into account for additive binarization
+    :param verbose: output features that are successfully additively binarized
+    :return: new data
+    """
+
+    done = []
+
+    for i, feat in enumerate(feats):
+
+        # check if wanted feature is in feature list
+        if (feat in features):
+
+            # find index where to analyze feature
+            idx_to_analyze = features.index(feat)
+
+            # expand data with 1 where value is defined, 0 where value is undefined
+            data = np.c_[data, data[:, idx_to_analyze] != -999]
+
+            # add feature name
+            features.append(features[idx_to_analyze] + "_NAN_BINARIZED")
+            done.append(feat)
+
+    if verbose:
+        print("Features for whom additive binarization was performed:", *done, sep='\n')
+
+    return data, features
+
 # taken from labs
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
@@ -214,7 +248,7 @@ def gradient_descent_sparse(loss_function, w, lambda_, max_iters, verbose=False,
     :param max_iters: maximum number of iterations
     :param verbose: Print output
     :param args: extra arguments
-    :return:
+    :return: weight, loss
     """
 
     # parameters of the optimization
@@ -394,7 +428,6 @@ def ridge_regression(y, tx, lambda_):
     # return loss and gradient
     # return weight and loss
     return w, 1/(2*n) * np.sum((y - tx @ w) ** 2) + lambda_/2 * w.T.dot(w)
-
 
 
 def least_squares_loss_function(y, tx, w):
