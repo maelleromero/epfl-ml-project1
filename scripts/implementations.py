@@ -25,15 +25,13 @@ def remove_features(data, features, feats, verbose=False):
     :return: new data, new features
     """
 
-    idx_to_remove = np.ones(len(feats))
+    idx_to_remove = -1 * np.ones(len(feats))
     removed = []
 
     for i, feat in enumerate(feats):
-        idx_to_remove[i] = np.where(features == feat)[0]
-        if not (idx_to_remove[i].shape == 0):
+        if feat in features:
+            idx_to_remove[i] = features.index(feat)
             removed.append(feat)
-
-    idx_to_remove = idx_to_remove.astype(np.int)
 
     if verbose:
         print("Features removed:", *removed, sep='\n')
@@ -57,7 +55,7 @@ def binarize_undefined(data, features, feats, verbose=False):
     for i, feat in enumerate(feats):
 
         # check if wanted feature is in feature list
-        if (feat in features):
+        if feat in features:
 
             # find index where to analyze feature
             idx_to_analyze = features.index(feat)
