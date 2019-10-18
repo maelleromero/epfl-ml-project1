@@ -11,6 +11,7 @@ def standardize(x):
     :param x: data
     :return: standardized data
     """
+
     x = (x - np.mean(x, axis=0)) / np.std(x, axis=0)
     return x
 
@@ -41,6 +42,7 @@ def remove_features(data, features, feats, verbose=False):
 def binarize_undefined(data, features, feats, verbose=False):
     """
     Additive Binarization of NaNs in a database.
+
     Adds a feature whose value is 1 if the value is defined in wanted feature
     column (and 0 otherwise).
 
@@ -76,6 +78,7 @@ def binarize_undefined(data, features, feats, verbose=False):
 def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     """
     Generate a minibatch iterator for a dataset.
+
     Takes as input two iterables (here the output desired values 'y' and the input data 'tx')
     Outputs an iterator which gives mini-batches of `batch_size` matching elements from `y` and `tx`.
     Data can be randomly shuffled to avoid ordering in the original data messing with the randomness of the minibatches.
@@ -83,6 +86,7 @@ def batch_iter(y, tx, batch_size, num_batches=1, shuffle=True):
     for minibatch_y, minibatch_tx in batch_iter(y, tx, 32):
         <DO-SOMETHING>
     """
+
     data_size = len(y)
 
     if shuffle:
@@ -151,7 +155,9 @@ def gradient_descent(loss_function, w, max_iters, gamma, verbose=False, *args):
 
 def gradient_descent_linesearch(loss_function, w, max_iters, verbose=False, *args):
     """
-    Linesearch Gradient Descent. Uses quadratic interpolation to find best
+    Linesearch Gradient Descent.
+
+    Uses quadratic interpolation to find best
     possible gamma value.
 
     :param loss_function: function to calculate loss
@@ -388,6 +394,7 @@ def compute_accuracy(ypred, yreal):
     :param yreal: real y
     :return: elementwise accuracy
     """
+
     return np.sum(ypred == yreal) / len(yreal)
 
 def least_squares(y, tx):
@@ -398,6 +405,7 @@ def least_squares(y, tx):
     :param tx: data
     :return: weight, loss
     """
+
     n, d = tx.shape
     w = np.zeros(d)
 
@@ -417,6 +425,7 @@ def ridge_regression(y, tx, lambda_):
     :param lambda_: lambda parameter
     :return: weight, loss
     """
+
     n, d = tx.shape
     w = np.zeros(d)
 
@@ -469,8 +478,6 @@ def least_squares_SGD(y, tx, initial_w, max_iters, gamma=0):
         return gradient_descent_linesearch(loss_function, initial_w, max_iters)
     else:
         return gradient_descent(loss_function, initial_w, max_iters, gamma)
-
-
 
 def log_reg_loss_function(y, tx, w):
     n, d = tx.shape
