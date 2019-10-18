@@ -84,7 +84,7 @@ def gradient_descent(function_object, w, max_evaluations, verbose=False, *args):
 
     return w, f
 
-def gradient_descent_L1(function_object, w, L1_lammy, max_evaluations, *args, verbose=False):
+def gradient_descent_L1(function_object, w, L1_lambda, max_evaluations, *args, verbose=False):
     """
     Find minimum L1
 
@@ -94,7 +94,7 @@ def gradient_descent_L1(function_object, w, L1_lammy, max_evaluations, *args, ve
 
     :param function_object: loss function
     :param w: weight
-    :param L1_lammy: lambda
+    :param L1_lambda: lambda
     :param max_evaluations: maximum number of evaluations
     :param args: additional arguments (y, X)
     :param verbose: print output
@@ -110,8 +110,8 @@ def gradient_descent_L1(function_object, w, L1_lammy, max_evaluations, *args, ve
     evals = 1
 
     alpha = 1.
-    proxL1 = lambda w, alpha: np.sign(w) * np.maximum(abs(w) - lambda_ * alpha, 0)
-    L1Term = lambda w: L1_lammy * np.sum(np.abs(w))
+    proxL1 = lambda w, alpha: np.sign(w) * np.maximum(abs(w) - L1_lambda * alpha, 0)
+    L1Term = lambda w: L1_lambda * np.sum(np.abs(w))
 
     while True:
         gtd = None

@@ -331,11 +331,11 @@ def cross_validate(y, tx, train, predict, ratio, n_iter):
 
     :param y: y
     :param tx: data
-    :param train: train function
+    :param train: train function (fitting function)
     :param predict: prediction function
     :param ratio: train/test ratio
     :param n_iter: number of iterations
-    :return:
+    :return: accuracy
     """
 
     n, d = tx.shape

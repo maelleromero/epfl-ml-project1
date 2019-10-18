@@ -5,7 +5,7 @@ import solver
 import numpy as np
 import math
 
-class least_squares:
+class LeastSquares:
     """Class representing the least squares classifier"""
 
     def __init__(self, verbose=False, max_evaluations=100):
@@ -71,7 +71,7 @@ class least_squares:
 
         return np.sign(X @ self.w)
 
-class logistic_regression:
+class LogisticRegression:
     """Logistic Regression"""
 
     def __init__(self, verbose=False, max_evaluations=100):
@@ -128,20 +128,20 @@ class logistic_regression:
 
         return np.squeeze(- f), g
 
-class logistic_regression_L2(logistic_regression):
+class LogisticRegressionL2(LogisticRegression):
     """L2 Regularized Logistic Regression"""
 
-    def __init__(self, lammy=1.0, verbose=False, max_evaluations=100):
+    def __init__(self, lambda_=1.0, verbose=False, max_evaluations=100):
         """
         Constructor
 
-        :param lammy: lambda of L2 regularization
+        :param lambda_: lambda of L2 regularization
         :param verbose: print out information
         :param max_evaluations: maximum number of evaluations
         """
-        super(logistic_regression_L2, self).__init__(verbose=verbose,
+        super(LogisticRegressionL2, self).__init__(verbose=verbose,
                                                      max_evaluations=max_evaluations)
-        self.lammy = lammy
+        self.lambda_ = lambda_
 
     def funObj(self, w, y, X):
         """
@@ -153,10 +153,10 @@ class logistic_regression_L2(logistic_regression):
         :return: loss, gradient
         """
         # Obtain normal loss and gradient using the superclass
-        f, g = super(logistic_regression_L2, self).funObj(w, y, X)
+        f, g = super(LogisticRegressionL2, self).funObj(w, y, X)
 
         # Add L2 regularization
-        f += self.lammy / 2. * w.dot(w)
-        g += self.lammy * w
+        f += self.lambda_ / 2. * w.dot(w)
+        g += self.lambda_ * w
 
         return f, g
