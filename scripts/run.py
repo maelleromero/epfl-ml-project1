@@ -24,13 +24,13 @@ X = np.c_[np.ones(len(y)), tX]
 FEATURE ENGINEERING
 """
 
-# removing unnecessary features
-feats_removal = [] #TODO: decide on list
-X, features = remove_features(X, features, feats_removal)
-
 # additive binarization of NaN values
-feats_binarization = [] #TODO: decide on list
+feats_binarization = []
 X, features = binarize_undefined(X, features, feats_binarization)
+
+# removing unnecessary features
+feats_removal = []
+X, features = remove_features(X, features, feats_removal)
 
 # handling NaN values by mean replacement
 #TODO: Anthony
@@ -43,13 +43,17 @@ FIT AND PREDICT
 """
 
 # choice of classifier
-classifier = least_squares()
+classifier = LeastSquares()
 
 # fitting
-classifier.fit(y, X)
+#classifier.fit(y, X)
 
 # prediction
-weight = classifier.predict(X)
+#weight = classifier.predict(X)
+
+
+accuracy = cross_validate(y, X, classifier, 0.8, 10)
+
 
 """
 TEST DATA PULL
@@ -67,13 +71,13 @@ TEST DATA FEATURE ENGINEERING
 to fit dimensionality, apply feature engineering to test data
 """
 
-# removing unnecessary features
-X_test, features_test = remove_features(X, features_test, feats_removal)
-
 # additive binarization of NaN values
 X_test, features_test = binarize_undefined(X, features_test, feats_binarization)
 
-# handling NaN values by mean replacement
+# removing unnecessary features
+X_test, features_test = remove_features(X, features_test, feats_removal)
+
+# handling NaN values by mean replacement (with train data mean)
 #TODO: Anthony
 
 # standardization (with train data attributes)

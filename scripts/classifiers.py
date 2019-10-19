@@ -101,9 +101,9 @@ class LogisticRegression:
 
         # fit weights
         self.w, f = solver.gradient_descent(self.function_object, self.w, self.max_evaluations,
-                                 y, X, verbose=self.verbose)
+                                 self.verbose, y, X)
 
-    def sigmoid(t):
+    def sigmoid(self, t):
         """
         Sigmoid
 
@@ -122,11 +122,26 @@ class LogisticRegression:
         :return: loss, gradient
         """
 
-        pred = self.sigmoid(X.dot(w))
-        f = y.T.dot(np.log(pred)) + (1 - y).T.dot(np.log(1 - pred))
-        g = X.T.dot(pred - y)
+        pred = y * X.dot(w)
 
-        return np.squeeze(- f), g
+        # function value
+        f = np.sum(np.log(1. + np.exp(- pred)))
+
+        # gradient value
+        res = - y / (1. + np.exp(pred))
+        g = X.T.dot(res)
+
+        return f, g
+
+    def predict(self, X):
+        """
+        Predict
+
+        :param X: data
+        :return: answer prediction
+        """
+
+        return np.sign(X @ self.w)
 
 class LogisticRegressionL2(LogisticRegression):
     """L2 Regularized Logistic Regression"""

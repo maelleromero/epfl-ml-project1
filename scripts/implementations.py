@@ -322,7 +322,7 @@ def gradient_descent_sparse(loss_function, w, lambda_, max_iters, verbose=False,
 
     return w, f
 
-def cross_validate(y, tx, train, predict, ratio, n_iter):
+def cross_validate(y, tx, classifier, ratio, n_iter):
     """
     Cross Validate
 
@@ -331,6 +331,7 @@ def cross_validate(y, tx, train, predict, ratio, n_iter):
 
     :param y: y
     :param tx: data
+    :param classifier: classifier for model fitting
     :param train: train function (fitting function)
     :param predict: prediction function
     :param ratio: train/test ratio
@@ -341,7 +342,7 @@ def cross_validate(y, tx, train, predict, ratio, n_iter):
     n, d = tx.shape
     n_train = math.floor(ratio * n)
     
-    accuracy = 0
+    accuracy = np.zeros(n_iter)
     
     for i in range(n_iter):
         shuffle_indices = np.random.permutation(np.arange(n))
@@ -354,12 +355,12 @@ def cross_validate(y, tx, train, predict, ratio, n_iter):
         test_y = shuffled_y[n_train:]
         test_tx = shuffled_tx[n_train:,:]
         
-        w, loss = train(train_y, train_tx)
-        y_pred = predict(test_tx, w)
+        classifier.fit(train_y, train_tx)
+        y_pred = classifier.predict(test_tx)
         
-        accuracy += compute_accuracy(y_pred, test_y)
+        accuracy[i] = compute_accuracy(y_pred, test_y)
     
-    return accuracy / n_iter
+    return accuracy
 
 def find_max_hyperparam(classifier, lambdas):
     """
