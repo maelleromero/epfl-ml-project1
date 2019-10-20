@@ -546,3 +546,47 @@ def kernel_predict(kernel_fun, y, X, Xtest, *args, lambda_=0):
     u = np.linalg.solve(K + lambda_ * np.eye(len(y)), y)
     
     return np.sign(Ktest @ u)
+
+def build_k_indices(y, k_fold, seed=1):
+    """build k indices for k-fold."""
+    num_row = y.shape[0]
+    interval = int(num_row / k_fold)
+    np.random.seed(seed)
+    indices = np.random.permutation(num_row)
+    k_indices = [indices[k * interval: (k + 1) * interval]
+                 for k in range(k_fold)]
+    return np.array(k_indices)
+
+def cross_validation_kfold(model, y, x, k_fold):
+    """returns the accuracies of the k fold cross validation for the model chosen"""
+    accuracies = []
+    # Splitting indices in fold
+    ind = build_k_indices(x,k_fold)
+    # Computations for each split in train and test
+    for i in range(0,k_fold):
+        ind_sort= np.sort(ind[i])
+        ind_opp=np.array(sorted(set(range(0, x.shape[0])).difference(ind_sort)))
+        xtrain, xtest = x[ind_opp], x[ind[i]]
+        ytrain, ytest = y[ind_opp], y[ind[i]]
+        model.fit(ytrain, xtrain)
+        y_pred = model.predict(xtest)
+        accuracies.append(compute_accuracy(y_pred, ytest))
+    return accuracies
+
+def model_comparison(classifier,y,x,k_fold):
+    names = []
+    result =[]
+    for model_name, model in classifier:  
+        score = np.array(cross_validation_kfold(model,y,x,k_fold))
+        result.append(score)
+        names.append(model_name)
+        print_message = "%s| Mean=%f STD=%f" % (model_name, score.mean(), score.std())
+        print(print_message)
+
+    fig = plt.figure()
+    fig.suptitle('Model Comparison')
+    ax = fig.add_subplot(111)
+    plt.boxplot(result)
+    ax.set_xticklabels(names)
+    plt.show()
+    return result, names
