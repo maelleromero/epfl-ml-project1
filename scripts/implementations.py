@@ -3,6 +3,7 @@
 
 import numpy as np
 import math
+import matplotlib.pyplot as plt
 
 def standardize(x):
     """
@@ -580,7 +581,7 @@ def model_comparison(classifier,y,x,k_fold):
         score = np.array(cross_validation_kfold(model,y,x,k_fold))
         result.append(score)
         names.append(model_name)
-        print_message = "%s| Mean=%f STD=%f" % (model_name, score.mean(), score.std())
+        print_message = "%s: Mean=%f STD=%f" % (model_name, score.mean(), score.std())
         print(print_message)
 
     fig = plt.figure()
